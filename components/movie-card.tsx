@@ -14,6 +14,7 @@ export default function MovieCard({
   Trailer,
   Actors,
   Directors,
+  priority = false,
 }: {
   id: string;
   Poster: string;
@@ -24,6 +25,7 @@ export default function MovieCard({
   Trailer: string;
   Actors: string[];
   Directors: string[];
+  priority?: boolean;
 }) {
   const router = useRouter();
 
@@ -53,6 +55,7 @@ export default function MovieCard({
             height={750}
             className="h-full w-full object-cover"
             sizes="(max-width: 768px) 100vw, 33vw"
+            priority={priority}
           />
         </div>
         <div className="space-y-2">

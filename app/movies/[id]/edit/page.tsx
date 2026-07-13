@@ -94,11 +94,11 @@ export default function EditMoviePage() {
     if (form.movieName) body.name = form.movieName;
     if (form.posterURL) body.posterURl = form.posterURL;
     if (form.releaseYear) body.releaseyear = Number(form.releaseYear);
-    if (form.duration) body.duration = form.duration;
+    if (form.duration) body.duration = Number(form.duration);
     if (form.genre) body.genre = form.genre;
     if (form.trailerURL) body.trailerURL = form.trailerURL;
-    if (form.actorIDs.length > 0) body.actors = form.actorIDs;
-    if (form.directorIDs.length > 0) body.directors = form.directorIDs;
+    if (form.actorIDs.length > 0) body.actorID = form.actorIDs;
+    if (form.directorIDs.length > 0) body.directorID = form.directorIDs;
 
     const response = await fetch(`http://localhost:8000/movie/edit/${id}`, {
       method: "PATCH",

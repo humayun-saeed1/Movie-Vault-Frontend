@@ -31,7 +31,7 @@ export default async function Home() {
       <div className="flex flex-col p-4 mt-5">
         <h2 className="text-2xl font-semibold mt-4 ">Discover Your Next Favorite Movie</h2>
         <div className="grid grid-cols-6 gap-6 mt-4">
-       {movies.map((movie: any) => (
+       {movies.map((movie: any, index: number) => (
         <MovieCard
           key={movie.id}
           id={movie.id}
@@ -43,6 +43,7 @@ export default async function Home() {
           Trailer={movie.trailerURL}
           Actors={movie.actors?.map((actor: any) => actor.name) || []}
           Directors={movie.directors?.map((director: any) => director.name) || []}
+          priority={index < 6}
         />
        ))}
       </div>

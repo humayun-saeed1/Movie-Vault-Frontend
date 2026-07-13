@@ -65,11 +65,11 @@ export default function AddMovie() {
         name: form.movieName,
         posterURl: form.posterURL,
         releaseyear: Number(form.releaseYear),
-        duration: form.duration,
+        duration: Number(form.duration),
         genre: form.genre,
         trailerURL: form.trailerURL,
-        actors: form.actorIDs.length > 0 ? form.actorIDs : undefined,
-        directors: form.directorIDs.length > 0 ? form.directorIDs : undefined,
+        actorID: form.actorIDs.length > 0 ? form.actorIDs : undefined,
+        directorID: form.directorIDs.length > 0 ? form.directorIDs : undefined,
       }),
     });
 
