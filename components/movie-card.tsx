@@ -3,6 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function MovieCard({
   id,
@@ -28,13 +31,16 @@ export default function MovieCard({
   priority?: boolean;
 }) {
   const router = useRouter();
+  const { token, user } = useAuth();
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!confirm("Are you sure you want to delete this movie?")) return;
 
-    const response = await fetch(`http://localhost:8000/movie/delete/${id}`, {
+    const response = await fetch(`${API_URL}/movie/delete/${id}`, {
       method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
 
     if (response.ok) {
@@ -87,18 +93,22 @@ export default function MovieCard({
         >
           View Details
         </Link>
-        <Link
-          href={`/movies/${id}/edit`}
-          className="text-center border border-blue-600 text-blue-600 py-1.5 rounded hover:bg-blue-50 w-full"
-        >
-          Edit
-        </Link>
-        <button
-          onClick={handleDelete}
-          className="text-center border border-red-500 text-red-500 py-1.5 rounded hover:bg-red-50 w-full"
-        >
-          Delete
-        </button>
+        {canEdit && (
+          <>
+            <Link
+              href={`/movies/${id}/edit`}
+              className="text-center border border-blue-600 text-blue-600 py-1.5 rounded hover:bg-blue-50 w-full"
+            >
+              Edit
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="text-center border border-red-500 text-red-500 py-1.5 rounded hover:bg-red-50 w-full"
+            >
+              Delete
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type ActorDetail = {
   id: string;
@@ -19,11 +22,17 @@ export default function ActorViewPage() {
   const id = params?.id as string;
   const [actor, setActor] = useState<ActorDetail | null>(null);
 
+  const { token, user } = useAuth();
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+
   useEffect(() => {
     if (!id) return;
 
     async function loadActor() {
-      const response = await fetch(`http://localhost:8000/actor/get-by-id/${id}`, { cache: "no-store" });
+      const response = await fetch(`${API_URL}/actor/get-by-id/${id}`, {
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       setActor(data);
     }
@@ -34,8 +43,9 @@ export default function ActorViewPage() {
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this actor?")) return;
 
-    const response = await fetch(`http://localhost:8000/actor/delete/${id}`, {
+    const response = await fetch(`${API_URL}/actor/delete/${id}`, {
       method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
 
     if (response.ok) {
@@ -61,19 +71,23 @@ export default function ActorViewPage() {
           <div>Age: {actor.age}</div>
           <div>About: {actor.about}</div>
         </div>
-        <div className="mt-4 flex gap-3">
-          <Link
-            href={`/actors/${id}/edit`}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Edit
-          </Link>
-          <button
-            onClick={handleDelete}
-            className="rounded border border-red-500 px-4 py-2 text-red-500 hover:bg-red-50"
-          >
-            Delete
-          </button>
+        <div className="flex gap-4 mt-6">
+          {canEdit && (
+            <>
+              <Link
+                href={`/actors/${id}/edit`}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-2 rounded-md font-semibold transition-colors"
+              >
+                Edit Actor
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="bg-red-50 hover:bg-red-100 text-red-600 px-6 py-2 rounded-md font-semibold transition-colors"
+              >
+                Delete Actor
+              </button>
+            </>
+          )}
         </div>
       </div>
 

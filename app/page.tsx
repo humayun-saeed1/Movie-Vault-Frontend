@@ -1,26 +1,55 @@
-
 import MovieCard from "@/components/movie-card";
 import ActorCard from "@/components/actor-card";
 import DirectorCard from "@/components/director-card";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function fetchMovies() {
-  const response = await fetch('http://localhost:8000/movie/get-all', { cache: 'no-store' });
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value;
+  const response = await fetch(`${API_URL}/movie/get-all`, {
+    cache: 'no-store',
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  if (!response.ok) return [];
   const movies = await response.json();
-  return movies;
+  return Array.isArray(movies) ? movies : [];
 }
 
 async function fetchActors() {
-  const response = await fetch('http://localhost:8000/actor/get-all', { cache: 'no-store' });
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value;
+  const response = await fetch(`${API_URL}/actor/get-all`, {
+    cache: 'no-store',
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  if (!response.ok) return [];
   const actors = await response.json();
-  return actors;
+  return Array.isArray(actors) ? actors : [];
 }
+
 async function fetchDirectors() {
-  const response = await fetch('http://localhost:8000/director/get-all', { cache: 'no-store' });
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value;
+  const response = await fetch(`${API_URL}/director/get-all`, {
+    cache: 'no-store',
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  if (!response.ok) return [];
   const directors = await response.json();
-  return directors;
+  return Array.isArray(directors) ? directors : [];
 }
 
 export default async function Home() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value;
+
+  if (!token) {
+    redirect('/auth/signin');
+  }
+
   const movies = await fetchMovies();
   const actors = await fetchActors();
   const directors = await fetchDirectors();

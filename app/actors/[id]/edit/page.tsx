@@ -2,7 +2,11 @@
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import MultiSelectDropdown from "@/components/multi-select-dropdown";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Movie = { id: string; name: string };
 
@@ -38,11 +42,23 @@ export default function EditActorPage() {
   });
   const [status, setStatus] = useState("");
 
+  const { token, user } = useAuth();
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+
+  useEffect(() => {
+    if (!canEdit) {
+      router.push("/actors");
+    }
+  }, [canEdit, router]);
+
   useEffect(() => {
     if (!id) return;
 
     async function loadActor() {
-      const response = await fetch(`http://localhost:8000/actor/get-by-id/${id}`, { cache: "no-store" });
+      const response = await fetch(`${API_URL}/actor/get-by-id/${id}`, {
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       setActor(data);
     }
@@ -54,7 +70,10 @@ export default function EditActorPage() {
 
   useEffect(() => {
     async function loadMovies() {
-      const response = await fetch("http://localhost:8000/movie/get-all", { cache: "no-store" });
+      const response = await fetch(`${API_URL}/movie/get-all`, {
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       setMovies(data);
     }
@@ -80,9 +99,12 @@ export default function EditActorPage() {
     if (form.imageURL) body.imageURL = form.imageURL;
     if (form.movieIDs.length) body.movieID = form.movieIDs;
 
-    const response = await fetch(`http://localhost:8000/actor/edit/${id}`, {
+    const response = await fetch(`${API_URL}/actor/edit/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify(body),
     });
 
@@ -159,9 +181,14 @@ export default function EditActorPage() {
           onChange={(ids) => setForm((current) => ({ ...current, movieIDs: ids }))}
         />
 
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Update Actor
-        </button>
+        <div className="flex gap-3 items-center">
+          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Update Actor
+          </button>
+          <Link href={`/actors/${id}`} className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100">
+            Back
+          </Link>
+        </div>
         {status && <div className="text-sm text-slate-700">{status}</div>}
       </form>
     </div>
