@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type DirectorDetail = {
   id: string;
@@ -19,11 +22,17 @@ export default function DirectorViewPage() {
   const id = params?.id as string;
   const [director, setDirector] = useState<DirectorDetail | null>(null);
 
+  const { token, user } = useAuth();
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+
   useEffect(() => {
     if (!id) return;
 
     async function loadDirector() {
-      const response = await fetch(`http://localhost:8000/director/get-by-id/${id}`, { cache: "no-store" });
+      const response = await fetch(`${API_URL}/director/get-by-id/${id}`, {
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       setDirector(data);
     }
@@ -34,8 +43,9 @@ export default function DirectorViewPage() {
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this director?")) return;
 
-    const response = await fetch(`http://localhost:8000/director/delete/${id}`, {
+    const response = await fetch(`${API_URL}/director/delete/${id}`, {
       method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
 
     if (response.ok) {
@@ -61,19 +71,23 @@ export default function DirectorViewPage() {
           <div>Age: {director.age}</div>
           <div>About: {director.about}</div>
         </div>
-        <div className="mt-4 flex gap-3">
-          <Link
-            href={`/directors/${id}/edit`}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Edit
-          </Link>
-          <button
-            onClick={handleDelete}
-            className="rounded border border-red-500 px-4 py-2 text-red-500 hover:bg-red-50"
-          >
-            Delete
-          </button>
+        <div className="flex gap-4 mt-6">
+          {canEdit && (
+            <>
+              <Link
+                href={`/directors/${id}/edit`}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-2 rounded-md font-semibold transition-colors"
+              >
+                Edit Director
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="bg-red-50 hover:bg-red-100 text-red-600 px-6 py-2 rounded-md font-semibold transition-colors"
+              >
+                Delete Director
+              </button>
+            </>
+          )}
         </div>
       </div>
 

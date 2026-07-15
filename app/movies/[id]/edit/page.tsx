@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import MultiSelectDropdown from "@/components/multi-select-dropdown";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Actor = { id: string; name: string };
 type Director = { id: string; name: string };
@@ -49,11 +53,23 @@ export default function EditMoviePage() {
   });
   const [status, setStatus] = useState("");
 
+  const { token, user } = useAuth();
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+
+  useEffect(() => {
+    if (!canEdit) {
+      router.push("/movies");
+    }
+  }, [canEdit, router]);
+
   useEffect(() => {
     if (!id) return;
 
     async function loadMovie() {
-      const response = await fetch(`http://localhost:8000/movie/get/${id}`, { cache: "no-store" });
+      const response = await fetch(`${API_URL}/movie/get/${id}`, {
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       setMovie(data);
     }
@@ -66,8 +82,14 @@ export default function EditMoviePage() {
   useEffect(() => {
     async function loadOptions() {
       const [actorRes, directorRes] = await Promise.all([
-        fetch("http://localhost:8000/actor/get-all", { cache: "no-store" }),
-        fetch("http://localhost:8000/director/get-all", { cache: "no-store" }),
+        fetch(`${API_URL}/actor/get-all`, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }),
+        fetch(`${API_URL}/director/get-all`, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }),
       ]);
       const actorsData = await actorRes.json();
       const directorsData = await directorRes.json();
@@ -100,9 +122,12 @@ export default function EditMoviePage() {
     if (form.actorIDs.length > 0) body.actorID = form.actorIDs;
     if (form.directorIDs.length > 0) body.directorID = form.directorIDs;
 
-    const response = await fetch(`http://localhost:8000/movie/edit/${id}`, {
+    const response = await fetch(`${API_URL}/movie/edit/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify(body),
     });
 
@@ -209,9 +234,14 @@ export default function EditMoviePage() {
           onChange={(ids) => setForm((current) => ({ ...current, directorIDs: ids }))}
         />
 
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Update Movie
-        </button>
+        <div className="flex gap-3 items-center">
+          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Update Movie
+          </button>
+          <Link href={`/movies/${id}`} className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100">
+            Back
+          </Link>
+        </div>
         {status && <div className="text-sm text-slate-700">{status}</div>}
       </form>
     </div>

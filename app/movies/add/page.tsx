@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import MultiSelectDropdown from "@/components/multi-select-dropdown";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Actor = { id: string; name: string };
 type Director = { id: string; name: string };
@@ -31,12 +36,29 @@ export default function AddMovie() {
     directorIDs: [],
   });
   const [status, setStatus] = useState("");
+  const router = useRouter();
+  const { token, user } = useAuth();
+  
+  // Basic client-side protection
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+
+  useEffect(() => {
+    if (!canEdit) {
+      router.push("/movies");
+    }
+  }, [canEdit, router]);
 
   useEffect(() => {
     async function loadOptions() {
       const [actorRes, directorRes] = await Promise.all([
-        fetch("http://localhost:8000/actor/get-all", { cache: "no-store" }),
-        fetch("http://localhost:8000/director/get-all", { cache: "no-store" }),
+        fetch(`${API_URL}/actor/get-all`, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }),
+        fetch(`${API_URL}/director/get-all`, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }),
       ]);
       const actorsData = await actorRes.json();
       const directorsData = await directorRes.json();
@@ -58,9 +80,12 @@ export default function AddMovie() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const response = await fetch("http://localhost:8000/movie/create", {
+    const response = await fetch(`${API_URL}/movie/create`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({
         name: form.movieName,
         posterURl: form.posterURL,
@@ -180,9 +205,14 @@ export default function AddMovie() {
           onChange={(ids) => setForm((current) => ({ ...current, directorIDs: ids }))}
         />
 
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Add Movie
-        </button>
+        <div className="flex gap-3 items-center">
+          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Add Movie
+          </button>
+          <Link href="/movies" className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100">
+            Back
+          </Link>
+        </div>
         {status && <div className="text-sm text-slate-700">{status}</div>}
       </form>
     </div>

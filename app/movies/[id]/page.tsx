@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type MovieDetail = {
   id: string;
@@ -22,12 +25,18 @@ export default function MovieViewPage() {
   const router = useRouter();
   const id = params?.id as string;
   const [movie, setMovie] = useState<MovieDetail | null>(null);
+  
+  const { token, user } = useAuth();
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
 
   useEffect(() => {
     if (!id) return;
 
     async function loadMovie() {
-      const response = await fetch(`http://localhost:8000/movie/get/${id}`, { cache: "no-store" });
+      const response = await fetch(`${API_URL}/movie/get/${id}`, {
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       setMovie(data);
     }
@@ -38,8 +47,9 @@ export default function MovieViewPage() {
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this movie?")) return;
 
-    const response = await fetch(`http://localhost:8000/movie/delete/${id}`, {
+    const response = await fetch(`${API_URL}/movie/delete/${id}`, {
       method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
 
     if (response.ok) {
@@ -83,20 +93,24 @@ export default function MovieViewPage() {
             )}
           </div>
         </div>
-        <div className="mt-4 flex gap-3">
-          <Link
-            href={`/movies/${id}/edit`}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Edit
-          </Link>
-          <button
-            onClick={handleDelete}
-            className="rounded border border-red-500 px-4 py-2 text-red-500 hover:bg-red-50"
-          >
-            Delete
-          </button>
-        </div>
+          <div className="flex gap-4 mt-4">
+            {canEdit && (
+              <>
+                <Link
+                  href={`/movies/${id}/edit`}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-2 rounded-md font-semibold transition-colors"
+                >
+                  Edit Movie
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 px-6 py-2 rounded-md font-semibold transition-colors"
+                >
+                  Delete Movie
+                </button>
+              </>
+            )}
+          </div>
       </div>
 
       {movie.actors && movie.actors.length > 0 && (

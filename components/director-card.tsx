@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function DirectorCard({
   id,
@@ -15,13 +18,16 @@ export default function DirectorCard({
   Movies: string[];
 }) {
   const router = useRouter();
+  const { token, user } = useAuth();
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!confirm("Are you sure you want to delete this director?")) return;
 
-    const response = await fetch(`http://localhost:8000/director/delete/${id}`, {
+    const response = await fetch(`${API_URL}/director/delete/${id}`, {
       method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
 
     if (response.ok) {
@@ -52,18 +58,22 @@ export default function DirectorCard({
         >
           View Details
         </Link>
-        <Link
-          href={`/directors/${id}/edit`}
-          className="text-center border border-blue-600 text-blue-600 py-1.5 rounded hover:bg-blue-50 w-full"
-        >
-          Edit
-        </Link>
-        <button
-          onClick={handleDelete}
-          className="text-center border border-red-500 text-red-500 py-1.5 rounded hover:bg-red-50 w-full"
-        >
-          Delete
-        </button>
+        {canEdit && (
+          <>
+            <Link
+              href={`/directors/${id}/edit`}
+              className="text-center border border-blue-600 text-blue-600 py-1.5 rounded hover:bg-blue-50 w-full"
+            >
+              Edit
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="text-center border border-red-500 text-red-500 py-1.5 rounded hover:bg-red-50 w-full"
+            >
+              Delete
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

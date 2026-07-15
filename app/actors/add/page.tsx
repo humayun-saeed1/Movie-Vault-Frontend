@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import MultiSelectDropdown from "@/components/multi-select-dropdown";
+import { useAuth } from "@/context/auth-context";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Movie = { id: string; name: string };
 
@@ -23,10 +28,23 @@ export default function AddActor() {
     movieIDs: [],
   });
   const [status, setStatus] = useState("");
+  const router = useRouter();
+  const { token, user } = useAuth();
+  
+  const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+
+  useEffect(() => {
+    if (!canEdit) {
+      router.push("/actors");
+    }
+  }, [canEdit, router]);
 
   useEffect(() => {
     async function loadMovies() {
-      const response = await fetch("http://localhost:8000/movie/get-all", { cache: "no-store" });
+      const response = await fetch(`${API_URL}/movie/get-all`, {
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       setMovies(data);
     }
@@ -56,9 +74,12 @@ export default function AddActor() {
       requestBody.movieID = form.movieIDs;
     }
 
-    const response = await fetch("http://localhost:8000/actor/create", {
+    const response = await fetch(`${API_URL}/actor/create`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
       body: JSON.stringify(requestBody),
     });
 
@@ -130,9 +151,14 @@ export default function AddActor() {
           onChange={(ids) => setForm((current) => ({ ...current, movieIDs: ids }))}
         />
 
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Add Actor
-        </button>
+        <div className="flex gap-3 items-center">
+          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Add Actor
+          </button>
+          <Link href="/actors" className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100">
+            Back
+          </Link>
+        </div>
         {status && <div className="text-sm text-slate-700">{status}</div>}
       </form>
     </div>
