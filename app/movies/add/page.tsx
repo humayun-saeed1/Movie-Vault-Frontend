@@ -81,14 +81,14 @@ export default function AddMovie() {
     event.preventDefault();
 
     if (form.actorIDs.length === 0 && form.directorIDs.length === 0) {
-      const proceed = window.confirm("You haven't selected any actors or directors for this movie. Do you want to proceed and create the movie without them? (Click Cancel to go back and select or create them first)");
-      if (!proceed) return;
+      window.alert("You must select at least one actor and one director. If none are available, please create them first.");
+      return;
     } else if (form.actorIDs.length === 0) {
-      const proceed = window.confirm("You haven't selected any actors for this movie. Do you want to proceed without actors?");
-      if (!proceed) return;
+      window.alert("You must select at least one actor for this movie. If none are available, please create an actor first.");
+      return;
     } else if (form.directorIDs.length === 0) {
-      const proceed = window.confirm("You haven't selected any directors for this movie. Do you want to proceed without directors?");
-      if (!proceed) return;
+      window.alert("You must select at least one director for this movie. If none are available, please create a director first.");
+      return;
     }
 
     const response = await fetch(`${API_URL}/movie/create`, {
