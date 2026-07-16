@@ -41,19 +41,25 @@ export default function MultiSelectDropdown({
         </button>
         {open && (
           <div className="absolute z-10 w-full border rounded mt-1 bg-white dark:bg-neutral-900 max-h-48 overflow-y-auto">
-            {options.map((option) => (
-              <label
-                key={option.id}
-                className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(option.id)}
-                  onChange={() => toggle(option.id)}
-                />
-                <span>{option.name}</span>
-              </label>
-            ))}
+            {options.length === 0 ? (
+              <div className="px-3 py-3 text-sm text-gray-500 text-center">
+                No {label.toLowerCase()} available.
+              </div>
+            ) : (
+              options.map((option) => (
+                <label
+                  key={option.id}
+                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(option.id)}
+                    onChange={() => toggle(option.id)}
+                  />
+                  <span>{option.name}</span>
+                </label>
+              ))
+            )}
           </div>
         )}
       </div>

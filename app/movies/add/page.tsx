@@ -80,6 +80,17 @@ export default function AddMovie() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (form.actorIDs.length === 0 && form.directorIDs.length === 0) {
+      const proceed = window.confirm("You haven't selected any actors or directors for this movie. Do you want to proceed and create the movie without them? (Click Cancel to go back and select or create them first)");
+      if (!proceed) return;
+    } else if (form.actorIDs.length === 0) {
+      const proceed = window.confirm("You haven't selected any actors for this movie. Do you want to proceed without actors?");
+      if (!proceed) return;
+    } else if (form.directorIDs.length === 0) {
+      const proceed = window.confirm("You haven't selected any directors for this movie. Do you want to proceed without directors?");
+      if (!proceed) return;
+    }
+
     const response = await fetch(`${API_URL}/movie/create`, {
       method: "POST",
       headers: {
