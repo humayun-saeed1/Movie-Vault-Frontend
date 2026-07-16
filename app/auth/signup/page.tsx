@@ -126,7 +126,7 @@ export default function SignUpPage() {
             id="role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="border rounded px-3 py-2 outline-none focus:border-blue-500"
+            className="border rounded px-3 py-2 outline-none focus:border-blue-500 bg-transparent text-black dark:text-white [&>option]:text-black [&>option]:dark:bg-neutral-900"
           >
             <option value="VIEWER">Viewer</option>
             <option value="EDITOR">Editor</option>

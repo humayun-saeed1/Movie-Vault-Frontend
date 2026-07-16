@@ -80,6 +80,17 @@ export default function AddMovie() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (form.actorIDs.length === 0 && form.directorIDs.length === 0) {
+      window.alert("You must select at least one actor and one director. If none are available, please create them first.");
+      return;
+    } else if (form.actorIDs.length === 0) {
+      window.alert("You must select at least one actor for this movie. If none are available, please create an actor first.");
+      return;
+    } else if (form.directorIDs.length === 0) {
+      window.alert("You must select at least one director for this movie. If none are available, please create a director first.");
+      return;
+    }
+
     const response = await fetch(`${API_URL}/movie/create`, {
       method: "POST",
       headers: {
