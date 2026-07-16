@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 
 export default function Header() {
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, isLoggedIn, isAdmin, logout } = useAuth();
   const pathname = usePathname();
 
   if (pathname.startsWith("/auth")) {
@@ -27,6 +27,7 @@ export default function Header() {
         <Link href="/movies">Movies</Link>
         <Link href="/actors">Actors</Link>
         <Link href="/directors">Directors</Link>
+        {isAdmin && <Link href="/admin" className="text-red-500 font-bold">Admin</Link>}
       </div>
 
       {/* User Info & Logout (Right) */}
