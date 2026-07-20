@@ -31,10 +31,15 @@ export default function AdminPanel({ token }: { token: string }) {
         fetch(`${API_URL}/auth/get-all`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
-      const moviesData = await moviesRes.json();
-      const actorsData = await actorsRes.json();
-      const directorsData = await directorsRes.json();
-      const usersData = await usersRes.json();
+      let moviesData = await moviesRes.json();
+      let actorsData = await actorsRes.json();
+      let directorsData = await directorsRes.json();
+      let usersData = await usersRes.json();
+
+      moviesData = moviesData.movies || moviesData;
+      actorsData = actorsData.actors || actorsData;
+      directorsData = directorsData.directors || directorsData;
+      usersData = usersData.users || usersData;
 
       setData({
         movies: Array.isArray(moviesData) ? moviesData.filter((m) => m.status === "PENDING") : [],

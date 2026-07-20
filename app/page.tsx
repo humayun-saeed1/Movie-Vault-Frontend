@@ -14,7 +14,8 @@ async function fetchMovies() {
     headers: token ? { Authorization: `Bearer ${token}` } : {}
   });
   if (!response.ok) return [];
-  const movies = await response.json();
+  const data = await response.json();
+  const movies = data.movies || data;
   return Array.isArray(movies) ? movies : [];
 }
 
@@ -26,7 +27,8 @@ async function fetchActors() {
     headers: token ? { Authorization: `Bearer ${token}` } : {}
   });
   if (!response.ok) return [];
-  const actors = await response.json();
+  const data = await response.json();
+  const actors = data.actors || data;
   return Array.isArray(actors) ? actors : [];
 }
 
@@ -38,7 +40,8 @@ async function fetchDirectors() {
     headers: token ? { Authorization: `Bearer ${token}` } : {}
   });
   if (!response.ok) return [];
-  const directors = await response.json();
+  const data = await response.json();
+  const directors = data.directors || data;
   return Array.isArray(directors) ? directors : [];
 }
 

@@ -93,8 +93,8 @@ export default function EditMoviePage() {
       ]);
       const actorsData = await actorRes.json();
       const directorsData = await directorRes.json();
-      setActors(actorsData);
-      setDirectors(directorsData);
+      setActors(actorsData.actors || (Array.isArray(actorsData) ? actorsData : []));
+      setDirectors(directorsData.directors || (Array.isArray(directorsData) ? directorsData : []));
     }
 
     loadOptions().catch(() => {
