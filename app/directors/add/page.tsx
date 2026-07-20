@@ -46,7 +46,7 @@ export default function AddDirector() {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       const data = await response.json();
-      setMovies(data);
+      setMovies(data.movies || (Array.isArray(data) ? data : []));
     }
 
     loadMovies().catch(() => {
