@@ -12,7 +12,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("VIEWER");
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ export default function SignUpPage() {
       const response = await fetch(`${API_URL}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, role }),
+        body: JSON.stringify({ username, email, password, role: "VIEWER" }),
       });
 
       const data = await response.json();
@@ -43,18 +43,14 @@ export default function SignUpPage() {
         return;
       }
 
-      if (role === "EDITOR") {
-        setSuccess("Account created! Your account is pending admin approval before you can sign in.");
-      } else {
-        setSuccess("Account created! Redirecting to sign in...");
-        setTimeout(() => router.push("/auth/signin"), 2000);
-      }
+      setSuccess("Account created! Redirecting to sign in...");
+      setTimeout(() => router.push("/auth/signin"), 2000);
 
       setUsername("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
-      setRole("VIEWER");
+
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -120,23 +116,7 @@ export default function SignUpPage() {
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="role" className="font-semibold">Role</label>
-          <select
-            id="role"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="border rounded px-3 py-2 outline-none focus:border-blue-500 bg-transparent text-black dark:text-white [&>option]:text-black [&>option]:dark:bg-neutral-900"
-          >
-            <option value="VIEWER">Viewer</option>
-            <option value="EDITOR">Editor</option>
-          </select>
-          {role === "EDITOR" && (
-            <div className="text-xs text-amber-600 mt-1">
-              Editor accounts require admin approval before you can sign in.
-            </div>
-          )}
-        </div>
+
 
         {error && <div className="text-red-600 text-sm font-medium">{error}</div>}
         {success && <div className="text-green-600 text-sm font-medium">{success}</div>}
