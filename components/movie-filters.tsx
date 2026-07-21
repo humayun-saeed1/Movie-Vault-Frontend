@@ -94,6 +94,7 @@ export default function MovieFilters() {
           <option value="">None</option>
           <option value="title">Title</option>
           <option value="year">Year</option>
+          <option value="rating">Rating</option>
         </select>
       </div>
       <div>

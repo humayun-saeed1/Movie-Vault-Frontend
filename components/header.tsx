@@ -34,6 +34,8 @@ export default function Header() {
       <div className="w-1/3 flex justify-end items-center gap-4">
         {isLoggedIn && (
           <>
+            <Link href="/favourites" className="text-sm text-pink-500 font-semibold hover:underline">Favourites</Link>
+            <Link href="/watchlist" className="text-sm text-indigo-500 font-semibold hover:underline">Watchlist</Link>
             <span className="text-sm text-slate-600">Hi, {user?.username}</span>
             <button
               onClick={logout}

@@ -16,6 +16,26 @@ export default async function MoviePage({
   const user = userCookie ? JSON.parse(decodeURIComponent(userCookie)) : null;
   const canAdd = user?.role === "ADMIN" || user?.role === "EDITOR";
 
+  let favIds = new Set<string>();
+  let watchlistIds = new Set<string>();
+
+  if (token) {
+    try {
+      const [favRes, wlRes] = await Promise.all([
+        fetch(`${API_URL}/favourite/my`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/watchlist/my`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      if (favRes.ok) {
+         const favs = await favRes.json();
+         favs.forEach((m: any) => favIds.add(m.id));
+      }
+      if (wlRes.ok) {
+         const wls = await wlRes.json();
+         wls.forEach((m: any) => watchlistIds.add(m.id));
+      }
+    } catch {}
+  }
+
   const resolvedParams = await searchParams;
   const query = new URLSearchParams();
   Object.entries(resolvedParams).forEach(([key, value]) => {
@@ -24,14 +44,24 @@ export default async function MoviePage({
   if (!query.has('page')) query.set('page', '1');
   if (!query.has('limit')) query.set('limit', '12'); // 12 movies per page looks good for grid
 
-  const response = await fetch(`${API_URL}/movie/get-all?${query.toString()}`, {
-    cache: "no-store",
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-  const data = await response.json();
-  const movies = data.movies || (Array.isArray(data) ? data : []);
-  const page = data.page || 1;
-  const totalPages = data.totalPages || 1;
+  let movies = [];
+  let page = 1;
+  let totalPages = 1;
+
+  try {
+    const response = await fetch(`${API_URL}/movie/get-all?${query.toString()}`, {
+      cache: "no-store",
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (response.ok) {
+      const data = await response.json();
+      movies = data.movies || (Array.isArray(data) ? data : []);
+      page = data.page || 1;
+      totalPages = data.totalPages || 1;
+    }
+  } catch (error) {
+    console.error("Failed to fetch movies:", error);
+  }
 
   const buildPaginationLink = (targetPage: number) => {
     const newQuery = new URLSearchParams(query.toString());
@@ -72,6 +102,9 @@ export default async function MoviePage({
               Actors={movie.actors?.map((actor: any) => actor.name) || []}
               Directors={movie.directors?.map((director: any) => director.name) || []}
               priority={index < 6}
+              isFav={favIds.has(movie.id)}
+              isWatchlisted={watchlistIds.has(movie.id)}
+              averageRating={movie.averageRating}
             />
           ))}
         </div>

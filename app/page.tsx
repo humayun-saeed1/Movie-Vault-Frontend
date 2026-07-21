@@ -9,40 +9,55 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 async function fetchMovies() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
-  const response = await fetch(`${API_URL}/movie/get-all`, {
-    cache: 'no-store',
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-  if (!response.ok) return [];
-  const data = await response.json();
-  const movies = data.movies || data;
-  return Array.isArray(movies) ? movies : [];
+  try {
+    const response = await fetch(`${API_URL}/movie/get-all`, {
+      cache: 'no-store',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const movies = data.movies || data;
+    return Array.isArray(movies) ? movies : [];
+  } catch (error) {
+    console.error("Failed to fetch movies:", error);
+    return [];
+  }
 }
 
 async function fetchActors() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
-  const response = await fetch(`${API_URL}/actor/get-all`, {
-    cache: 'no-store',
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-  if (!response.ok) return [];
-  const data = await response.json();
-  const actors = data.actors || data;
-  return Array.isArray(actors) ? actors : [];
+  try {
+    const response = await fetch(`${API_URL}/actor/get-all`, {
+      cache: 'no-store',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const actors = data.actors || data;
+    return Array.isArray(actors) ? actors : [];
+  } catch (error) {
+    console.error("Failed to fetch actors:", error);
+    return [];
+  }
 }
 
 async function fetchDirectors() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
-  const response = await fetch(`${API_URL}/director/get-all`, {
-    cache: 'no-store',
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-  if (!response.ok) return [];
-  const data = await response.json();
-  const directors = data.directors || data;
-  return Array.isArray(directors) ? directors : [];
+  try {
+    const response = await fetch(`${API_URL}/director/get-all`, {
+      cache: 'no-store',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const directors = data.directors || data;
+    return Array.isArray(directors) ? directors : [];
+  } catch (error) {
+    console.error("Failed to fetch directors:", error);
+    return [];
+  }
 }
 
 export default async function Home() {
@@ -56,6 +71,26 @@ export default async function Home() {
   const movies = await fetchMovies();
   const actors = await fetchActors();
   const directors = await fetchDirectors();
+
+  let favIds = new Set<string>();
+  let watchlistIds = new Set<string>();
+
+  if (token) {
+    try {
+      const [favRes, wlRes] = await Promise.all([
+        fetch(`${API_URL}/favourite/my`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/watchlist/my`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      if (favRes.ok) {
+         const favs = await favRes.json();
+         favs.forEach((m: any) => favIds.add(m.id));
+      }
+      if (wlRes.ok) {
+         const wls = await wlRes.json();
+         wls.forEach((m: any) => watchlistIds.add(m.id));
+      }
+    } catch {}
+  }
 
   return (
     <div>
@@ -76,6 +111,9 @@ export default async function Home() {
           Actors={movie.actors?.map((actor: any) => actor.name) || []}
           Directors={movie.directors?.map((director: any) => director.name) || []}
           priority={index < 6}
+          isFav={favIds.has(movie.id)}
+          isWatchlisted={watchlistIds.has(movie.id)}
+          averageRating={movie.averageRating}
         />
        ))}
       </div>

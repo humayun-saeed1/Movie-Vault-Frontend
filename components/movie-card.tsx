@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { useState, useEffect } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -18,6 +19,9 @@ export default function MovieCard({
   Actors,
   Directors,
   priority = false,
+  isFav = false,
+  isWatchlisted = false,
+  averageRating = 0,
 }: {
   id: string;
   Poster: string;
@@ -29,10 +33,56 @@ export default function MovieCard({
   Actors: string[];
   Directors: string[];
   priority?: boolean;
+  isFav?: boolean;
+  isWatchlisted?: boolean;
+  averageRating?: number;
 }) {
   const router = useRouter();
   const { token, user } = useAuth();
   const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+  const isLoggedIn = !!token;
+
+  const [fav, setFav] = useState(isFav);
+  const [watchlist, setWatchlist] = useState(isWatchlisted);
+  const [loadingAction, setLoadingAction] = useState(false);
+
+  useEffect(() => {
+    setFav(isFav);
+  }, [isFav]);
+
+  useEffect(() => {
+    setWatchlist(isWatchlisted);
+  }, [isWatchlisted]);
+
+  const handleToggleFav = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isLoggedIn) return alert("Please sign in to favorite movies.");
+    setLoadingAction(true);
+    try {
+      const res = await fetch(`${API_URL}/favourite/toggle/${id}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) setFav(!fav);
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
+  const handleToggleWatchlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isLoggedIn) return alert("Please sign in to add to watchlist.");
+    setLoadingAction(true);
+    try {
+      const res = await fetch(`${API_URL}/watchlist/toggle/${id}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) setWatchlist(!watchlist);
+    } finally {
+      setLoadingAction(false);
+    }
+  };
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,7 +115,14 @@ export default function MovieCard({
           />
         </div>
         <div className="space-y-2">
-          <div className="font-semibold text-lg">{Title}</div>
+          <div className="flex justify-between items-start gap-2">
+            <div className="font-semibold text-lg leading-tight">{Title}</div>
+            {averageRating > 0 && (
+              <div className="text-yellow-500 font-bold whitespace-nowrap text-sm bg-gray-900/80 px-2 py-0.5 rounded flex items-center gap-1">
+                ★ {averageRating.toFixed(1)}
+              </div>
+            )}
+          </div>
           <div className="text-sm ">Release: {ReleaseDate}</div>
           <div className="text-sm ">Duration: {Duration}</div>
           <div className="text-sm ">Genre: {Genre}</div>
@@ -87,12 +144,32 @@ export default function MovieCard({
       </div>
 
       <div className="mt-4 flex flex-col gap-2">
-        <Link
-          href={`/movies/${id}`}
-          className="text-center bg-blue-600 text-white py-1.5 rounded hover:bg-blue-700 w-full"
-        >
-          View Details
-        </Link>
+        <div className="flex gap-2 w-full">
+          <Link
+            href={`/movies/${id}`}
+            className="text-center bg-blue-600 text-white py-1.5 rounded hover:bg-blue-700 flex-1"
+          >
+            View Details
+          </Link>
+          {isLoggedIn && (
+            <>
+              <button 
+                onClick={handleToggleFav} 
+                disabled={loadingAction}
+                className={`py-1.5 px-3 rounded border font-medium ${fav ? 'bg-pink-100 text-pink-600 border-pink-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                {fav ? '♥ Fav' : '♡ Fav'}
+              </button>
+              <button 
+                onClick={handleToggleWatchlist} 
+                disabled={loadingAction}
+                className={`py-1.5 px-3 rounded border font-medium ${watchlist ? 'bg-indigo-100 text-indigo-600 border-indigo-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                {watchlist ? '✓ List' : '+ List'}
+              </button>
+            </>
+          )}
+        </div>
         {canEdit && (
           <>
             <Link
