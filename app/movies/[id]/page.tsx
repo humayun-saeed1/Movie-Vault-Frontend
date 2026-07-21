@@ -18,6 +18,7 @@ type MovieDetail = {
   trailerURL: string;
   actors?: Array<{ id: string; name: string; imageURL: string }>;
   directors?: Array<{ id: string; name: string; imageURL: string }>;
+  reviews?: Array<{ id: string; rating: number; comment: string; user: { id: string; username: string } }>;
 };
 
 export default function MovieViewPage() {
@@ -28,6 +29,11 @@ export default function MovieViewPage() {
   
   const { token, user } = useAuth();
   const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+  const isLoggedIn = !!token;
+
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -54,6 +60,38 @@ export default function MovieViewPage() {
 
     if (response.ok) {
       router.push("/movies");
+    }
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoggedIn) return alert("Please sign in to leave a review.");
+    setSubmittingReview(true);
+    try {
+      const res = await fetch(`${API_URL}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ movieId: id, rating: Number(rating), comment })
+      });
+      if (res.ok) {
+        setRating(5);
+        setComment("");
+        // Reload movie
+        const movieRes = await fetch(`${API_URL}/movie/get/${id}`, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        setMovie(await movieRes.json());
+      } else {
+        alert("Failed to submit review.");
+      }
+    } catch {
+      alert("Error submitting review.");
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -148,6 +186,63 @@ export default function MovieViewPage() {
           </div>
         </div>
       )}
+
+      <div className="mt-12 max-w-3xl mx-auto border-t pt-8">
+        <h2 className="text-2xl font-semibold mb-6">Reviews</h2>
+        
+        {isLoggedIn ? (
+          <form onSubmit={handleSubmitReview} className="mb-8 bg-gray-800 p-4 rounded-lg">
+            <h3 className="font-semibold mb-2">Leave a Review</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Rating (1-10)</label>
+              <input 
+                type="number" 
+                min="1" max="10" 
+                value={rating} 
+                onChange={(e) => setRating(parseInt(e.target.value))} 
+                className="w-24 px-3 py-2 bg-gray-700 rounded-md outline-none"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Comment</label>
+              <textarea 
+                value={comment} 
+                onChange={(e) => setComment(e.target.value)} 
+                className="w-full px-3 py-2 bg-gray-700 rounded-md outline-none min-h-[80px]"
+                placeholder="What did you think?"
+              />
+            </div>
+            <button 
+              type="submit" 
+              disabled={submittingReview}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold transition-colors disabled:opacity-50"
+            >
+              {submittingReview ? "Submitting..." : "Submit Review"}
+            </button>
+          </form>
+        ) : (
+          <div className="mb-8 p-4 bg-gray-800 rounded-lg text-gray-400">
+            Please sign in to leave a review.
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {movie.reviews && movie.reviews.length > 0 ? (
+            movie.reviews.map((review) => (
+              <div key={review.id} className="p-4 border rounded-lg bg-gray-900">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-semibold">{review.user?.username || "Unknown"}</div>
+                  <div className="text-yellow-500 font-bold">★ {review.rating}/10</div>
+                </div>
+                {review.comment && <div className="text-gray-300">{review.comment}</div>}
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-500">No reviews yet. Be the first to review!</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

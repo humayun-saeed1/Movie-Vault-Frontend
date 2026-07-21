@@ -9,40 +9,55 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 async function fetchMovies() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
-  const response = await fetch(`${API_URL}/movie/get-all`, {
-    cache: 'no-store',
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-  if (!response.ok) return [];
-  const data = await response.json();
-  const movies = data.movies || data;
-  return Array.isArray(movies) ? movies : [];
+  try {
+    const response = await fetch(`${API_URL}/movie/get-all`, {
+      cache: 'no-store',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const movies = data.movies || data;
+    return Array.isArray(movies) ? movies : [];
+  } catch (error) {
+    console.error("Failed to fetch movies:", error);
+    return [];
+  }
 }
 
 async function fetchActors() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
-  const response = await fetch(`${API_URL}/actor/get-all`, {
-    cache: 'no-store',
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-  if (!response.ok) return [];
-  const data = await response.json();
-  const actors = data.actors || data;
-  return Array.isArray(actors) ? actors : [];
+  try {
+    const response = await fetch(`${API_URL}/actor/get-all`, {
+      cache: 'no-store',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const actors = data.actors || data;
+    return Array.isArray(actors) ? actors : [];
+  } catch (error) {
+    console.error("Failed to fetch actors:", error);
+    return [];
+  }
 }
 
 async function fetchDirectors() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
-  const response = await fetch(`${API_URL}/director/get-all`, {
-    cache: 'no-store',
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
-  if (!response.ok) return [];
-  const data = await response.json();
-  const directors = data.directors || data;
-  return Array.isArray(directors) ? directors : [];
+  try {
+    const response = await fetch(`${API_URL}/director/get-all`, {
+      cache: 'no-store',
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const directors = data.directors || data;
+    return Array.isArray(directors) ? directors : [];
+  } catch (error) {
+    console.error("Failed to fetch directors:", error);
+    return [];
+  }
 }
 
 export default async function Home() {
