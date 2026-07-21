@@ -31,7 +31,7 @@ export default function MovieViewPage() {
   const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
   const isLoggedIn = !!token;
 
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState<number | string>(5);
   const [comment, setComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
 
@@ -199,7 +199,7 @@ export default function MovieViewPage() {
                 type="number" 
                 min="1" max="10" 
                 value={rating} 
-                onChange={(e) => setRating(parseInt(e.target.value))} 
+                onChange={(e) => setRating(e.target.value === "" ? "" : parseInt(e.target.value))} 
                 className="w-24 px-3 py-2 bg-gray-700 rounded-md outline-none"
                 required
               />

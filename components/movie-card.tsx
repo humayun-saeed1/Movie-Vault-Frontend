@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -43,6 +43,14 @@ export default function MovieCard({
   const [fav, setFav] = useState(isFav);
   const [watchlist, setWatchlist] = useState(isWatchlisted);
   const [loadingAction, setLoadingAction] = useState(false);
+
+  useEffect(() => {
+    setFav(isFav);
+  }, [isFav]);
+
+  useEffect(() => {
+    setWatchlist(isWatchlisted);
+  }, [isWatchlisted]);
 
   const handleToggleFav = async (e: React.MouseEvent) => {
     e.preventDefault();

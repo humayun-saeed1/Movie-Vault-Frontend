@@ -72,6 +72,26 @@ export default async function Home() {
   const actors = await fetchActors();
   const directors = await fetchDirectors();
 
+  let favIds = new Set<string>();
+  let watchlistIds = new Set<string>();
+
+  if (token) {
+    try {
+      const [favRes, wlRes] = await Promise.all([
+        fetch(`${API_URL}/favourite/my`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/watchlist/my`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      if (favRes.ok) {
+         const favs = await favRes.json();
+         favs.forEach((m: any) => favIds.add(m.id));
+      }
+      if (wlRes.ok) {
+         const wls = await wlRes.json();
+         wls.forEach((m: any) => watchlistIds.add(m.id));
+      }
+    } catch {}
+  }
+
   return (
     <div>
       <h1 className="text-3xl font-bold mt-5 text-center ">Welcome to Movie Vault !</h1>
@@ -91,6 +111,8 @@ export default async function Home() {
           Actors={movie.actors?.map((actor: any) => actor.name) || []}
           Directors={movie.directors?.map((director: any) => director.name) || []}
           priority={index < 6}
+          isFav={favIds.has(movie.id)}
+          isWatchlisted={watchlistIds.has(movie.id)}
         />
        ))}
       </div>
