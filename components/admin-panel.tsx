@@ -1,174 +1,106 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-type ItemType = "movies" | "actors" | "directors" | "users";
-
 export default function AdminPanel({ token }: { token: string }) {
-  const [activeTab, setActiveTab] = useState<ItemType>("movies");
-  const [data, setData] = useState<{
-    movies: any[];
-    actors: any[];
-    directors: any[];
-    users: any[];
-  }>({
-    movies: [],
-    actors: [],
-    directors: [],
-    users: [],
-  });
-  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
     setLoading(true);
-    try {
-      const [moviesRes, actorsRes, directorsRes, usersRes] = await Promise.all([
-        fetch(`${API_URL}/movie/get-all`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_URL}/actor/get-all`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_URL}/director/get-all`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_URL}/auth/get-all`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-
-      let moviesData = await moviesRes.json();
-      let actorsData = await actorsRes.json();
-      let directorsData = await directorsRes.json();
-      let usersData = await usersRes.json();
-
-      moviesData = moviesData.movies || moviesData;
-      actorsData = actorsData.actors || actorsData;
-      directorsData = directorsData.directors || directorsData;
-      usersData = usersData.users || usersData;
-
-      setData({
-        movies: Array.isArray(moviesData) ? moviesData.filter((m) => m.status === "PENDING") : [],
-        actors: Array.isArray(actorsData) ? actorsData.filter((a) => a.status === "PENDING") : [],
-        directors: Array.isArray(directorsData) ? directorsData.filter((d) => d.status === "PENDING") : [],
-        users: Array.isArray(usersData) ? usersData.filter((u) => u.status === "PENDING") : [],
-      });
-    } catch (error) {
-      console.error("Failed to fetch admin data", error);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [token]);
-
-  const handleAction = async (type: ItemType, id: string, action: "approve" | "reject") => {
-    let endpoint = "";
-    if (type === "users") {
-      endpoint = `${API_URL}/auth/${action}-user/${id}`;
-    } else {
-      let routePrefix = type.slice(0, -1); // movies -> movie, actors -> actor, directors -> director
-      endpoint = `${API_URL}/${routePrefix}/${action}/${id}`;
-    }
 
     try {
-      const res = await fetch(endpoint, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`${API_URL}/auth/create-editor`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ username, email, password }),
       });
 
-      if (res.ok) {
-        // Remove item from state
-        setData((prev) => ({
-          ...prev,
-          [type]: prev[type].filter((item) => item.id !== id),
-        }));
-      } else {
-        console.error("Action failed");
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Failed to create editor.");
+        return;
       }
-    } catch (error) {
-      console.error("Action failed", error);
+
+      setSuccess("Editor account created successfully!");
+      setUsername("");
+      setEmail("");
+      setPassword("");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const renderTable = (type: ItemType) => {
-    const items = data[type];
-    if (items.length === 0) return <p className="text-gray-500 p-4">No pending {type}.</p>;
-
-    return (
-      <div className="overflow-x-auto bg-gray-900 rounded-lg shadow">
-        <table className="w-full text-left text-sm text-gray-300">
-          <thead className="text-xs uppercase bg-gray-800 text-gray-400">
-            <tr>
-              <th className="px-6 py-3">Name/Title</th>
-              {type === "users" ? (
-                <>
-                  <th className="px-6 py-3">Email</th>
-                  <th className="px-6 py-3">Role</th>
-                </>
-              ) : (
-                <th className="px-6 py-3">Creator ID</th>
-              )}
-              <th className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id} className="border-b border-gray-700 hover:bg-gray-800">
-                <td className="px-6 py-4 font-medium text-white">{item.name || item.username}</td>
-                {type === "users" ? (
-                  <>
-                    <td className="px-6 py-4">{item.email}</td>
-                    <td className="px-6 py-4">{item.role}</td>
-                  </>
-                ) : (
-                  <td className="px-6 py-4">{item.createrId}</td>
-                )}
-                <td className="px-6 py-4 text-right space-x-2">
-                  <button
-                    onClick={() => handleAction(type, item.id, "approve")}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleAction(type, item.id, "reject")}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition"
-                  >
-                    Reject
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
   };
 
   return (
-    <div className="w-full">
-      <div className="flex space-x-4 border-b border-gray-700 mb-6 pb-2 overflow-x-auto">
-        {(["movies", "actors", "directors", "users"] as ItemType[]).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 capitalize font-semibold transition-colors rounded-t-md ${
-              activeTab === tab
-                ? "text-blue-500 border-b-2 border-blue-500"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            {tab}
-            {!loading && data[tab].length > 0 && (
-              <span className="ml-2 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">
-                {data[tab].length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+    <div className="w-full max-w-md mx-auto bg-gray-900 p-6 rounded-lg shadow mt-8">
+      <h2 className="text-xl font-semibold text-white mb-6">Onboard New Editor</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="username" className="text-sm font-medium text-gray-300">Username</label>
+          <input
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            type="text"
+            placeholder="Editor username"
+            className="border border-gray-700 bg-gray-800 text-white rounded px-3 py-2 outline-none focus:border-blue-500"
+            required
+          />
+        </div>
 
-      {loading ? (
-        <div className="text-center py-10 text-gray-400">Loading...</div>
-      ) : (
-        renderTable(activeTab)
-      )}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="email" className="text-sm font-medium text-gray-300">Email</label>
+          <input
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            placeholder="Editor email"
+            className="border border-gray-700 bg-gray-800 text-white rounded px-3 py-2 outline-none focus:border-blue-500"
+            required
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="password" className="text-sm font-medium text-gray-300">Password</label>
+          <input
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            placeholder="Min 6 characters"
+            className="border border-gray-700 bg-gray-800 text-white rounded px-3 py-2 outline-none focus:border-blue-500"
+            minLength={6}
+            required
+          />
+        </div>
+
+        {error && <div className="text-red-500 text-sm font-medium">{error}</div>}
+        {success && <div className="text-green-500 text-sm font-medium">{success}</div>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors mt-4"
+        >
+          {loading ? "Creating..." : "Create Editor"}
+        </button>
+      </form>
     </div>
   );
 }
