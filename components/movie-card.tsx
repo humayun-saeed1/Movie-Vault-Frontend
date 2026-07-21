@@ -21,6 +21,7 @@ export default function MovieCard({
   priority = false,
   isFav = false,
   isWatchlisted = false,
+  averageRating = 0,
 }: {
   id: string;
   Poster: string;
@@ -34,6 +35,7 @@ export default function MovieCard({
   priority?: boolean;
   isFav?: boolean;
   isWatchlisted?: boolean;
+  averageRating?: number;
 }) {
   const router = useRouter();
   const { token, user } = useAuth();
@@ -113,7 +115,14 @@ export default function MovieCard({
           />
         </div>
         <div className="space-y-2">
-          <div className="font-semibold text-lg">{Title}</div>
+          <div className="flex justify-between items-start gap-2">
+            <div className="font-semibold text-lg leading-tight">{Title}</div>
+            {averageRating > 0 && (
+              <div className="text-yellow-500 font-bold whitespace-nowrap text-sm bg-gray-900/80 px-2 py-0.5 rounded flex items-center gap-1">
+                ★ {averageRating.toFixed(1)}
+              </div>
+            )}
+          </div>
           <div className="text-sm ">Release: {ReleaseDate}</div>
           <div className="text-sm ">Duration: {Duration}</div>
           <div className="text-sm ">Genre: {Genre}</div>

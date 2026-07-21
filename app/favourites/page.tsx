@@ -51,6 +51,7 @@ export default async function FavouritesPage() {
               Actors={movie.actors?.map((actor: any) => actor.name) || []}
               Directors={movie.directors?.map((director: any) => director.name) || []}
               isFav={true}
+              averageRating={movie.averageRating}
             />
           ))}
         </div>

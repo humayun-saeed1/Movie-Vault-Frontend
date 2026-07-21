@@ -113,6 +113,7 @@ export default async function Home() {
           priority={index < 6}
           isFav={favIds.has(movie.id)}
           isWatchlisted={watchlistIds.has(movie.id)}
+          averageRating={movie.averageRating}
         />
        ))}
       </div>

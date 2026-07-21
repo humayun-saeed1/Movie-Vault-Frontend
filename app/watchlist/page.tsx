@@ -51,6 +51,7 @@ export default async function WatchlistPage() {
               Actors={movie.actors?.map((actor: any) => actor.name) || []}
               Directors={movie.directors?.map((director: any) => director.name) || []}
               isWatchlisted={true}
+              averageRating={movie.averageRating}
             />
           ))}
         </div>
