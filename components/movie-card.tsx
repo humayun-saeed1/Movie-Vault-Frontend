@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -22,6 +23,7 @@ export default function MovieCard({
   isFav = false,
   isWatchlisted = false,
   averageRating = 0,
+  createrId,
 }: {
   id: string;
   Poster: string;
@@ -36,10 +38,12 @@ export default function MovieCard({
   isFav?: boolean;
   isWatchlisted?: boolean;
   averageRating?: number;
+  createrId?: string;
 }) {
   const router = useRouter();
   const { token, user } = useAuth();
   const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+  const canDelete = user?.role === "ADMIN" || (user?.role === "EDITOR" && createrId === user?.id);
   const isLoggedIn = !!token;
 
   const [fav, setFav] = useState(isFav);
@@ -94,9 +98,10 @@ export default function MovieCard({
     });
 
     if (response.ok) {
+      toast.success("Movie deleted successfully");
       router.refresh();
     } else {
-      alert("Failed to delete movie");
+      toast.error("Failed to delete movie");
     }
   };
 
@@ -171,20 +176,22 @@ export default function MovieCard({
           )}
         </div>
         {canEdit && (
-          <>
+          <div className="flex gap-2 w-full">
             <Link
               href={`/movies/${id}/edit`}
-              className="text-center border border-blue-600 text-blue-600 py-1.5 rounded hover:bg-blue-50 w-full"
+              className="text-center border border-blue-600 text-blue-600 py-1.5 rounded hover:bg-blue-50 flex-1"
             >
               Edit
             </Link>
-            <button
-              onClick={handleDelete}
-              className="text-center border border-red-500 text-red-500 py-1.5 rounded hover:bg-red-50 w-full"
-            >
-              Delete
-            </button>
-          </>
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                className="text-center border border-red-500 text-red-500 py-1.5 rounded hover:bg-red-50 flex-1"
+              >
+                Delete
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -114,6 +114,7 @@ export default async function Home() {
           isFav={favIds.has(movie.id)}
           isWatchlisted={watchlistIds.has(movie.id)}
           averageRating={movie.averageRating}
+          createrId={movie.createrId}
         />
        ))}
       </div>
@@ -128,6 +129,7 @@ export default async function Home() {
             Name={actor.name}
             Photo={actor.imageURL}
             Movies={actor.movies?.map((movie: any) => movie.name) || []}
+            createrId={actor.createrId}
           />
         ))}
         </div>
@@ -142,6 +144,7 @@ export default async function Home() {
               Name={director.name}
               Photo={director.imageURL}
               Movies={director.movies?.map((movie: any) => movie.name) || []}
+              createrId={director.createrId}
             />
           ))}
         </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import MultiSelectDropdown from "@/components/multi-select-dropdown";
 import { useAuth } from "@/context/auth-context";
 
@@ -84,10 +85,11 @@ export default function AddActor() {
     });
 
     if (response.ok) {
-      setStatus("Actor added successfully.");
+      toast.success("Actor added successfully!");
       setForm({ name: "", age: "", about: "", imageURL: "", movieIDs: [] });
+      router.push("/actors");
     } else {
-      setStatus("Failed to add actor.");
+      toast.error("Failed to add actor.");
     }
   };
 

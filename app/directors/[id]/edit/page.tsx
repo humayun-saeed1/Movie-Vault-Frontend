@@ -3,6 +3,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import MultiSelectDropdown from "@/components/multi-select-dropdown";
 import { useAuth } from "@/context/auth-context";
 
@@ -40,7 +41,6 @@ export default function EditDirectorPage() {
     imageURL: "",
     movieIDs: [],
   });
-  const [status, setStatus] = useState("");
 
   const { token, user } = useAuth();
   const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
@@ -61,12 +61,19 @@ export default function EditDirectorPage() {
       });
       const data = await response.json();
       setDirector(data);
+      setForm({
+        name: data.name || "",
+        age: data.age ? String(data.age) : "",
+        about: data.about || "",
+        imageURL: data.imageURL || "",
+        movieIDs: data.movies?.map((m: any) => m.id) || [],
+      });
     }
 
     loadDirector().catch(() => {
-      setStatus("Failed to load director.");
+      toast.error("Failed to load director.");
     });
-  }, [id]);
+  }, [id, token]);
 
   useEffect(() => {
     async function loadMovies() {
@@ -81,7 +88,7 @@ export default function EditDirectorPage() {
     loadMovies().catch(() => {
       setMovies([]);
     });
-  }, []);
+  }, [token]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
@@ -109,10 +116,10 @@ export default function EditDirectorPage() {
     });
 
     if (response.ok) {
-      setStatus("Director updated.");
+      toast.success("Director updated successfully!");
       router.push(`/directors/${id}`);
     } else {
-      setStatus("Update failed.");
+      toast.error("Failed to update director.");
     }
   };
 
@@ -123,7 +130,6 @@ export default function EditDirectorPage() {
   return (
     <div className="p-4 mt-5">
       <h1 className="text-3xl font-bold mt-5 text-center">Edit Director</h1>
-      <div className="text-sm text-slate-600 text-center mt-2">Leave blank to keep the current value.</div>
       <form className="mt-4 space-y-4 max-w-xl mx-auto" onSubmit={handleSubmit}>
         <div className="flex items-center gap-3">
           <label htmlFor="name" className="w-24 font-semibold">Name</label>
@@ -132,7 +138,6 @@ export default function EditDirectorPage() {
             value={form.name}
             onChange={handleChange}
             type="text"
-            placeholder={director.name}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>
@@ -146,7 +151,6 @@ export default function EditDirectorPage() {
             type="number"
             min="1"
             max="100"
-            placeholder={String(director.age)}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>
@@ -157,7 +161,6 @@ export default function EditDirectorPage() {
             id="about"
             value={form.about}
             onChange={handleChange}
-            placeholder={director.about}
             className="flex-1 border rounded px-3 py-2 min-h-[120px]"
           />
         </div>
@@ -169,7 +172,6 @@ export default function EditDirectorPage() {
             value={form.imageURL}
             onChange={handleChange}
             type="text"
-            placeholder={director.imageURL}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>

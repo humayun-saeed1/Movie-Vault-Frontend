@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import MultiSelectDropdown from "@/components/multi-select-dropdown";
 import { useAuth } from "@/context/auth-context";
 
@@ -72,6 +73,16 @@ export default function EditMoviePage() {
       });
       const data = await response.json();
       setMovie(data);
+      setForm({
+        movieName: data.name || "",
+        posterURL: data.posterURl || "",
+        releaseYear: data.releaseyear ? String(data.releaseyear) : "",
+        duration: data.duration ? String(data.duration) : "",
+        genre: data.genre || "",
+        trailerURL: data.trailerURL || "",
+        actorIDs: data.actors?.map((a: any) => a.id) || [],
+        directorIDs: data.directors?.map((d: any) => d.id) || [],
+      });
     }
 
     loadMovie().catch(() => {
@@ -132,10 +143,10 @@ export default function EditMoviePage() {
     });
 
     if (response.ok) {
-      setStatus("Movie updated.");
+      toast.success("Movie updated successfully!");
       router.push(`/movies/${id}`);
     } else {
-      setStatus("Update failed.");
+      toast.error("Failed to update movie.");
     }
   };
 
@@ -146,7 +157,6 @@ export default function EditMoviePage() {
   return (
     <div className="p-4 mt-5">
       <h1 className="text-3xl font-bold mt-5 text-center">Edit Movie</h1>
-      <div className="text-sm text-slate-600 text-center mt-2">Leave blank to keep the current value.</div>
       <form className="mt-4 space-y-4 max-w-xl mx-auto" onSubmit={handleSubmit}>
         <div className="flex items-center gap-3">
           <label htmlFor="movieName" className="w-24 font-semibold">Name</label>
@@ -155,7 +165,6 @@ export default function EditMoviePage() {
             value={form.movieName}
             onChange={handleChange}
             type="text"
-            placeholder={movie.name}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>
@@ -167,7 +176,6 @@ export default function EditMoviePage() {
             value={form.posterURL}
             onChange={handleChange}
             type="text"
-            placeholder={movie.posterURl}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>
@@ -179,7 +187,6 @@ export default function EditMoviePage() {
             value={form.releaseYear}
             onChange={handleChange}
             type="number"
-            placeholder={String(movie.releaseyear)}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>
@@ -191,7 +198,6 @@ export default function EditMoviePage() {
             value={form.duration}
             onChange={handleChange}
             type="text"
-            placeholder={movie.duration}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>
@@ -203,7 +209,6 @@ export default function EditMoviePage() {
             value={form.genre}
             onChange={handleChange}
             type="text"
-            placeholder={movie.genre}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>
@@ -215,7 +220,6 @@ export default function EditMoviePage() {
             value={form.trailerURL}
             onChange={handleChange}
             type="text"
-            placeholder={movie.trailerURL}
             className="flex-1 border rounded px-3 py-2"
           />
         </div>
