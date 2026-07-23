@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import MultiSelectDropdown from "@/components/multi-select-dropdown";
 import { useAuth } from "@/context/auth-context";
 
@@ -110,7 +111,7 @@ export default function AddMovie() {
     });
 
     if (response.ok) {
-      setStatus("Movie added successfully.");
+      toast.success("Movie added successfully!");
       setForm({
         movieName: "",
         posterURL: "",
@@ -121,8 +122,9 @@ export default function AddMovie() {
         actorIDs: [],
         directorIDs: [],
       });
+      router.push("/movies");
     } else {
-      setStatus("Failed to add movie.");
+      toast.error("Failed to add movie.");
     }
   };
 

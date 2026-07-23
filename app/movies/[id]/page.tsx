@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/context/auth-context";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -31,7 +32,8 @@ export default function MovieViewPage() {
   const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
   const isLoggedIn = !!token;
 
-  const [rating, setRating] = useState<number | string>(5);
+  const [rating, setRating] = useState<number | string>(0);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
 
@@ -65,7 +67,14 @@ export default function MovieViewPage() {
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoggedIn) return alert("Please sign in to leave a review.");
+    if (!isLoggedIn) {
+      toast.error("Please sign in to leave a review.");
+      return;
+    }
+    if (Number(rating) < 1) {
+      toast.error("Please select at least 1 star for your rating.");
+      return;
+    }
     setSubmittingReview(true);
     try {
       const res = await fetch(`${API_URL}/reviews`, {
@@ -77,7 +86,8 @@ export default function MovieViewPage() {
         body: JSON.stringify({ movieId: id, rating: Number(rating), comment })
       });
       if (res.ok) {
-        setRating(5);
+        toast.success("Review submitted successfully!");
+        setRating(0);
         setComment("");
         // Reload movie
         const movieRes = await fetch(`${API_URL}/movie/get/${id}`, {
@@ -86,12 +96,33 @@ export default function MovieViewPage() {
         });
         setMovie(await movieRes.json());
       } else {
-        alert("Failed to submit review.");
+        toast.error("Failed to submit review.");
       }
     } catch {
-      alert("Error submitting review.");
+      toast.error("Error submitting review.");
     } finally {
       setSubmittingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm("Are you sure you want to delete this review?")) return;
+    try {
+      const res = await fetch(`${API_URL}/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        toast.success("Review deleted successfully!");
+        setMovie((prev: any) => ({
+          ...prev,
+          reviews: prev.reviews.filter((r: any) => r.id !== reviewId)
+        }));
+      } else {
+        toast.error("Failed to delete review.");
+      }
+    } catch {
+      toast.error("Error deleting review.");
     }
   };
 
@@ -195,14 +226,20 @@ export default function MovieViewPage() {
             <h3 className="font-semibold mb-2">Leave a Review</h3>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Rating (1-10)</label>
-              <input 
-                type="number" 
-                min="1" max="10" 
-                value={rating} 
-                onChange={(e) => setRating(e.target.value === "" ? "" : parseInt(e.target.value))} 
-                className="w-24 px-3 py-2 bg-gray-700 rounded-md outline-none"
-                required
-              />
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(null)}
+                    className={`text-2xl transition-colors outline-none ${(hoverRating !== null ? star <= hoverRating : star <= (Number(rating) || 0)) ? "text-yellow-500" : "text-gray-500"}`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Comment</label>
@@ -229,15 +266,27 @@ export default function MovieViewPage() {
 
         <div className="space-y-4">
           {movie.reviews && movie.reviews.length > 0 ? (
-            movie.reviews.map((review) => (
+            movie.reviews.map((review) => {
+              const canDeleteReview = user?.role === "ADMIN" || user?.id === review.user?.id;
+              return (
               <div key={review.id} className="p-4 border rounded-lg bg-gray-900">
                 <div className="flex items-center justify-between mb-2">
                   <div className="font-semibold">{review.user?.username || "Unknown"}</div>
-                  <div className="text-yellow-500 font-bold">★ {review.rating}/10</div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-yellow-500 font-bold">★ {review.rating}/10</div>
+                    {canDeleteReview && (
+                      <button 
+                        onClick={() => handleDeleteReview(review.id)}
+                        className="text-red-500 text-sm hover:underline"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {review.comment && <div className="text-gray-300">{review.comment}</div>}
               </div>
-            ))
+            )})
           ) : (
             <div className="text-gray-500">No reviews yet. Be the first to review!</div>
           )}

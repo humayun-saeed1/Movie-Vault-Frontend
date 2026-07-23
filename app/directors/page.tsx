@@ -68,6 +68,7 @@ export default async function DirectorPage({
                       Name={director.name}
                       Photo={director.imageURL}
                       Movies={director.movies?.map((movie: any) => movie.name) || []}
+                      createrId={director.createrId}
                       />
                   ))}
               </div>

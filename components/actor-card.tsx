@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -16,10 +17,12 @@ export default function ActorCard({
   Name: string;
   Photo: string;
   Movies: string[];
+  createrId?: string;
 }) {
   const router = useRouter();
   const { token, user } = useAuth();
   const canEdit = user?.role === "ADMIN" || user?.role === "EDITOR";
+  const canDelete = user?.role === "ADMIN" || (user?.role === "EDITOR" && createrId === user?.id);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -31,9 +34,10 @@ export default function ActorCard({
     });
 
     if (response.ok) {
+      toast.success("Actor deleted successfully");
       router.refresh();
     } else {
-      alert("Failed to delete actor");
+      toast.error("Failed to delete actor");
     }
   };
 
@@ -59,20 +63,22 @@ export default function ActorCard({
           View Details
         </Link>
         {canEdit && (
-          <>
+          <div className="flex gap-2 w-full">
             <Link
               href={`/actors/${id}/edit`}
-              className="text-center border border-blue-600 text-blue-600 py-1.5 rounded hover:bg-blue-50 w-full"
+              className="text-center border border-blue-600 text-blue-600 py-1.5 rounded hover:bg-blue-50 flex-1"
             >
               Edit
             </Link>
-            <button
-              onClick={handleDelete}
-              className="text-center border border-red-500 text-red-500 py-1.5 rounded hover:bg-red-50 w-full"
-            >
-              Delete
-            </button>
-          </>
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                className="text-center border border-red-500 text-red-500 py-1.5 rounded hover:bg-red-50 flex-1"
+              >
+                Delete
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>

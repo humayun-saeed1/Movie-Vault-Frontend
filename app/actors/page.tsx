@@ -68,6 +68,7 @@ export default async function ActorPage({
                       Name={actor.name}
                       Photo={actor.imageURL}
                       Movies={actor.movies?.map((movie: any) => movie.name) || []}
+                      createrId={actor.createrId}
                       />
                   ))}
               </div>

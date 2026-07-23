@@ -105,6 +105,7 @@ export default async function MoviePage({
               isFav={favIds.has(movie.id)}
               isWatchlisted={watchlistIds.has(movie.id)}
               averageRating={movie.averageRating}
+              createrId={movie.createrId}
             />
           ))}
         </div>
