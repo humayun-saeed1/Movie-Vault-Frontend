@@ -21,6 +21,7 @@ type MovieFormState = {
   trailerURL: string;
   actorIDs: string[];
   directorIDs: string[];
+  file: File | null;
 };
 
 export default function AddMovie() {
@@ -35,6 +36,7 @@ export default function AddMovie() {
     trailerURL: "",
     actorIDs: [],
     directorIDs: [],
+    file: null,
   });
   const [status, setStatus] = useState("");
   const router = useRouter();
@@ -78,6 +80,12 @@ export default function AddMovie() {
     setForm((current) => ({ ...current, [id]: value }));
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setForm((current) => ({ ...current, file: event.target.files![0] }));
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -92,22 +100,28 @@ export default function AddMovie() {
       return;
     }
 
+    const formData = new FormData();
+    formData.append("name", form.movieName);
+    formData.append("releaseyear", form.releaseYear);
+    formData.append("duration", form.duration);
+    formData.append("genre", form.genre);
+    formData.append("trailerURL", form.trailerURL);
+    if (form.file) {
+      formData.append("file", form.file);
+    }
+    if (form.actorIDs.length > 0) {
+      formData.append("actorID", JSON.stringify(form.actorIDs));
+    }
+    if (form.directorIDs.length > 0) {
+      formData.append("directorID", JSON.stringify(form.directorIDs));
+    }
+
     const response = await fetch(`${API_URL}/movie/create`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      body: JSON.stringify({
-        name: form.movieName,
-        posterURl: form.posterURL,
-        releaseyear: Number(form.releaseYear),
-        duration: Number(form.duration),
-        genre: form.genre,
-        trailerURL: form.trailerURL,
-        actorID: form.actorIDs.length > 0 ? form.actorIDs : undefined,
-        directorID: form.directorIDs.length > 0 ? form.directorIDs : undefined,
-      }),
+      body: formData,
     });
 
     if (response.ok) {
@@ -121,6 +135,7 @@ export default function AddMovie() {
         trailerURL: "",
         actorIDs: [],
         directorIDs: [],
+        file: null,
       });
       router.push("/movies");
     } else {
@@ -145,13 +160,12 @@ export default function AddMovie() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label htmlFor="posterURL" className="w-24 font-semibold">Poster</label>
+          <label htmlFor="file" className="w-24 font-semibold">Poster</label>
           <input
-            id="posterURL"
-            value={form.posterURL}
-            onChange={handleChange}
-            type="text"
-            placeholder="Poster URL"
+            id="file"
+            onChange={handleFileChange}
+            type="file"
+            accept="image/*"
             className="flex-1 border rounded px-3 py-2"
           />
         </div>

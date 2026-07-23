@@ -26,6 +26,7 @@ type DirectorFormState = {
   about: string;
   imageURL: string;
   movieIDs: string[];
+  file: File | null;
 };
 
 export default function EditDirectorPage() {
@@ -40,6 +41,7 @@ export default function EditDirectorPage() {
     about: "",
     imageURL: "",
     movieIDs: [],
+    file: null,
   });
 
   const { token, user } = useAuth();
@@ -67,6 +69,7 @@ export default function EditDirectorPage() {
         about: data.about || "",
         imageURL: data.imageURL || "",
         movieIDs: data.movies?.map((m: any) => m.id) || [],
+        file: null,
       });
     }
 
@@ -95,24 +98,29 @@ export default function EditDirectorPage() {
     setForm((current) => ({ ...current, [id]: value }));
   };
 
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setForm((current) => ({ ...current, file: event.target.files![0] }));
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!id) return;
 
-    const body: Record<string, unknown> = {};
-    if (form.name) body.name = form.name;
-    if (form.age) body.age = Number(form.age);
-    if (form.about) body.about = form.about;
-    if (form.imageURL) body.imageURL = form.imageURL;
-    if (form.movieIDs.length) body.movieID = form.movieIDs;
+    const formData = new FormData();
+    if (form.name) formData.append("name", form.name);
+    if (form.age) formData.append("age", form.age);
+    if (form.about) formData.append("about", form.about);
+    if (form.file) formData.append("file", form.file);
+    if (form.movieIDs.length) formData.append("movieID", JSON.stringify(form.movieIDs));
 
     const response = await fetch(`${API_URL}/director/edit/${id}`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      body: JSON.stringify(body),
+      body: formData,
     });
 
     if (response.ok) {
@@ -166,14 +174,19 @@ export default function EditDirectorPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label htmlFor="imageURL" className="w-24 font-semibold">Image URL</label>
-          <input
-            id="imageURL"
-            value={form.imageURL}
-            onChange={handleChange}
-            type="text"
-            className="flex-1 border rounded px-3 py-2"
-          />
+          <label htmlFor="file" className="w-24 font-semibold">Image</label>
+          <div className="flex-1 flex flex-col gap-2">
+            {form.imageURL && (
+              <img src={form.imageURL} alt="Current Image" className="h-20 w-auto object-contain rounded" />
+            )}
+            <input
+              id="file"
+              onChange={handleFileChange}
+              type="file"
+              accept="image/*"
+              className="border rounded px-3 py-2"
+            />
+          </div>
         </div>
 
         <MultiSelectDropdown

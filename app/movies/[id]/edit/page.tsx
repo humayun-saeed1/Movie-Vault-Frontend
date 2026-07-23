@@ -33,6 +33,7 @@ type MovieFormState = {
   trailerURL: string;
   actorIDs: string[];
   directorIDs: string[];
+  file: File | null;
 };
 
 export default function EditMoviePage() {
@@ -51,6 +52,7 @@ export default function EditMoviePage() {
     trailerURL: "",
     actorIDs: [],
     directorIDs: [],
+    file: null,
   });
   const [status, setStatus] = useState("");
 
@@ -82,6 +84,7 @@ export default function EditMoviePage() {
         trailerURL: data.trailerURL || "",
         actorIDs: data.actors?.map((a: any) => a.id) || [],
         directorIDs: data.directors?.map((d: any) => d.id) || [],
+        file: null,
       });
     }
 
@@ -119,27 +122,32 @@ export default function EditMoviePage() {
     setForm((current) => ({ ...current, [id]: value }));
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setForm((current) => ({ ...current, file: event.target.files![0] }));
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!id) return;
 
-    const body: Record<string, unknown> = {};
-    if (form.movieName) body.name = form.movieName;
-    if (form.posterURL) body.posterURl = form.posterURL;
-    if (form.releaseYear) body.releaseyear = Number(form.releaseYear);
-    if (form.duration) body.duration = Number(form.duration);
-    if (form.genre) body.genre = form.genre;
-    if (form.trailerURL) body.trailerURL = form.trailerURL;
-    if (form.actorIDs.length > 0) body.actorID = form.actorIDs;
-    if (form.directorIDs.length > 0) body.directorID = form.directorIDs;
+    const formData = new FormData();
+    if (form.movieName) formData.append("name", form.movieName);
+    if (form.releaseYear) formData.append("releaseyear", form.releaseYear);
+    if (form.duration) formData.append("duration", form.duration);
+    if (form.genre) formData.append("genre", form.genre);
+    if (form.trailerURL) formData.append("trailerURL", form.trailerURL);
+    if (form.file) formData.append("file", form.file);
+    if (form.actorIDs.length > 0) formData.append("actorID", JSON.stringify(form.actorIDs));
+    if (form.directorIDs.length > 0) formData.append("directorID", JSON.stringify(form.directorIDs));
 
     const response = await fetch(`${API_URL}/movie/edit/${id}`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      body: JSON.stringify(body),
+      body: formData,
     });
 
     if (response.ok) {
@@ -170,14 +178,19 @@ export default function EditMoviePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label htmlFor="posterURL" className="w-24 font-semibold">Poster</label>
-          <input
-            id="posterURL"
-            value={form.posterURL}
-            onChange={handleChange}
-            type="text"
-            className="flex-1 border rounded px-3 py-2"
-          />
+          <label htmlFor="file" className="w-24 font-semibold">Poster</label>
+          <div className="flex-1 flex flex-col gap-2">
+            {form.posterURL && (
+              <img src={form.posterURL} alt="Current Poster" className="h-20 w-auto object-contain rounded" />
+            )}
+            <input
+              id="file"
+              onChange={handleFileChange}
+              type="file"
+              accept="image/*"
+              className="border rounded px-3 py-2"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
