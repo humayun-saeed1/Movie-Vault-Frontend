@@ -17,6 +17,7 @@ type ActorFormState = {
   about: string;
   imageURL: string;
   movieIDs: string[];
+  file: File | null;
 };
 
 export default function AddActor() {
@@ -27,6 +28,7 @@ export default function AddActor() {
     about: "",
     imageURL: "",
     movieIDs: [],
+    file: null,
   });
   const [status, setStatus] = useState("");
   const router = useRouter();
@@ -60,33 +62,38 @@ export default function AddActor() {
     setForm((current) => ({ ...current, [id]: value }));
   };
 
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setForm((current) => ({ ...current, file: event.target.files![0] }));
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus("Submitting...");
 
-    const requestBody: Record<string, unknown> = {
-      name: form.name,
-      age: Number(form.age),
-      about: form.about,
-      imageURL: form.imageURL || undefined,
-    };
-
+    const formData = new FormData();
+    formData.append("name", form.name);
+    formData.append("age", form.age);
+    formData.append("about", form.about);
+    if (form.file) {
+      formData.append("file", form.file);
+    }
     if (form.movieIDs && form.movieIDs.length > 0) {
-      requestBody.movieID = form.movieIDs;
+      formData.append("movieID", JSON.stringify(form.movieIDs));
     }
 
     const response = await fetch(`${API_URL}/actor/create`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      body: JSON.stringify(requestBody),
+      body: formData,
     });
 
     if (response.ok) {
       toast.success("Actor added successfully!");
-      setForm({ name: "", age: "", about: "", imageURL: "", movieIDs: [] });
+      setForm({ name: "", age: "", about: "", imageURL: "", movieIDs: [], file: null });
       router.push("/actors");
     } else {
       toast.error("Failed to add actor.");
@@ -135,13 +142,12 @@ export default function AddActor() {
         </div>
 
         <div className="flex items-center gap-3">
-          <label htmlFor="imageURL" className="w-24 font-semibold">Image URL</label>
+          <label htmlFor="file" className="w-24 font-semibold">Image</label>
           <input
-            id="imageURL"
-            value={form.imageURL}
-            onChange={handleChange}
-            type="text"
-            placeholder="Optional image URL"
+            id="file"
+            onChange={handleFileChange}
+            type="file"
+            accept="image/*"
             className="flex-1 border rounded px-3 py-2"
           />
         </div>

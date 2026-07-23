@@ -41,16 +41,22 @@ export default function MovieViewPage() {
     if (!id) return;
 
     async function loadMovie() {
-      const response = await fetch(`${API_URL}/movie/get/${id}`, {
-        cache: "no-store",
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      const data = await response.json();
-      setMovie(data);
+      try {
+        const response = await fetch(`${API_URL}/movie/get/${id}`, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setMovie(data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
 
-    loadMovie().catch(() => {});
-  }, [id]);
+    loadMovie();
+  }, [id, token]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this movie?")) return;
@@ -132,7 +138,10 @@ export default function MovieViewPage() {
 
   return (
     <div className="p-4 mt-5">
-      <h1 className="text-3xl font-bold mt-5 text-center">{movie.name}</h1>
+      <button onClick={() => router.back()} className="mb-4 text-blue-600 hover:underline font-semibold flex items-center gap-1">
+        &larr; Go Back
+      </button>
+      <h1 className="text-3xl font-bold text-center">{movie.name}</h1>
 
       <div className="max-w-3xl mx-auto mt-6 rounded-lg border p-4">
         {movie.posterURl && (

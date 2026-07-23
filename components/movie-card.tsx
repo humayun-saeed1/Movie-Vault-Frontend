@@ -67,7 +67,15 @@ export default function MovieCard({
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) setFav(!fav);
+      if (res.ok) {
+        setFav(!fav);
+        toast.success(fav ? "Removed from favorites" : "Added to favorites");
+        router.refresh();
+      } else {
+        toast.error("Failed to update favorites");
+      }
+    } catch (err) {
+      toast.error("An error occurred");
     } finally {
       setLoadingAction(false);
     }
@@ -82,7 +90,15 @@ export default function MovieCard({
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) setWatchlist(!watchlist);
+      if (res.ok) {
+        setWatchlist(!watchlist);
+        toast.success(watchlist ? "Removed from watchlist" : "Added to watchlist");
+        router.refresh();
+      } else {
+        toast.error("Failed to update watchlist");
+      }
+    } catch (err) {
+      toast.error("An error occurred");
     } finally {
       setLoadingAction(false);
     }
