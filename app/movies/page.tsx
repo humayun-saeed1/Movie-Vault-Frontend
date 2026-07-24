@@ -26,14 +26,14 @@ export default async function MoviePage({
         fetch(`${API_URL}/watchlist/my`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       if (favRes.ok) {
-         const favs = await favRes.json();
-         favs.forEach((m: any) => favIds.add(m.id));
+        const favs = await favRes.json();
+        favs.forEach((m: any) => favIds.add(m.id));
       }
       if (wlRes.ok) {
-         const wls = await wlRes.json();
-         wls.forEach((m: any) => watchlistIds.add(m.id));
+        const wls = await wlRes.json();
+        wls.forEach((m: any) => watchlistIds.add(m.id));
       }
-    } catch {}
+    } catch { }
   }
 
   const resolvedParams = await searchParams;
